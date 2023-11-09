@@ -4,7 +4,7 @@ CFLAGS = -Wall -pthread
 SRCS = main.c thread_func.c
 OBJS = $(SRCS:.c=.o)
 HEADERS = thread_func.h
-TARGET = main
+TARGET = main_prog
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS)

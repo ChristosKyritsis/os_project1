@@ -29,7 +29,7 @@ enum ProcessType {
     B
 };
 
-char message[] = "Hello World";
+char message[] = "Hello World"; // This will change
 
 int main(int argc, char** argv) {
     int resInp, resRec;

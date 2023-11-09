@@ -22,3 +22,5 @@ void* inputThread(void* item) {
     }
     pthread_exit(NULL);
 }
+
+// test prog
