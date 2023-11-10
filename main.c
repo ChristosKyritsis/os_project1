@@ -35,7 +35,8 @@ int main(int argc, char** argv) {
     int resInp, resRec;
     pthread_t inputThread, receiveThread;
 
-    //resInp = pthread_create(&inputThread, NULL, input, )
+    resInp = pthread_create(&inputThread, NULL, input_Thread, A);
+    // resRec = pthread_create(&receiveThread, NULL, receive_Thread, A);
 
 
     // if (argc == 1) {

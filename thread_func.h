@@ -1,2 +1,2 @@
 //starting test
-void* inputThread(void* item);
+void* input_Thread(void* item);
