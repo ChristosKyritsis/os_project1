@@ -1,7 +1,7 @@
 #include "main.c"
 
 void* input_Thread(void* item) {
-    enum ProcessType childID = *((enum ProcessType*)item);
+    enum Process childID = *((enum Process*)item);
 
     while(1) {
         printf("Give any message to continue, and type #BYE# if you want to terminate the process\n");
@@ -22,5 +22,3 @@ void* input_Thread(void* item) {
     }
     pthread_exit(NULL);
 }
-
-// test prog

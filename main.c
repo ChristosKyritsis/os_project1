@@ -15,7 +15,7 @@ struct Message {
     int size;
 };
 
-struct SharedMemory{
+typedef struct SharedMemory{
     sem_t sem;
     int count; // Number of messsages
     struct Message message;
@@ -24,7 +24,7 @@ struct SharedMemory{
 struct SharedMemory* sharedMemory;
 
 
-enum ProcessType {
+enum Process {
     A,
     B
 };
@@ -32,10 +32,16 @@ enum ProcessType {
 char message[] = "Hello World"; // This will change
 
 int main(int argc, char** argv) {
-    int resInp, resRec;
+    int res1, res2;
     pthread_t inputThread, receiveThread;
 
-    resInp = pthread_create(&inputThread, NULL, input_Thread, A);
+    res1 = pthread_create(&inputThread, NULL, input_Thread, A);
+
+    if (res1 != 0) {
+        printf("Thread Creation Failed\n");
+        exit(EXIT_FAILURE);
+    }
+
     // resRec = pthread_create(&receiveThread, NULL, receive_Thread, A);
 
 
