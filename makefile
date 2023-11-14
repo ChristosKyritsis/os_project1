@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -pthread
-
+ 
 SRCS = procA.c 
 OBJS = $(SRCS:.c=.o)
 HEADERS = 

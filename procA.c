@@ -121,6 +121,5 @@ int main(int argc, char* argv[]) {
 
     // res2 = pthread_create(&receiveThread, NULL, receive_Thread, (void*)proc);
 
-
     return 0;
 }
