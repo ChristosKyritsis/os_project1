@@ -1,16 +1,17 @@
 CC = gcc
 CFLAGS = -Wall -pthread
 
-SRCS = main.c thread_func.c
+SRCS = procA.c 
 OBJS = $(SRCS:.c=.o)
-HEADERS = thread_func.h
+HEADERS = 
 TARGET = main_prog
+BINDIR = bin
 
-$(TARGET): $(OBJS)
+$(BINDIR)/$(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(BINDIR)/$(TARGET)
