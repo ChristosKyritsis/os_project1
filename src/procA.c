@@ -12,51 +12,80 @@
 #define BUFSIZE 1024
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
-void processB();
+void processB(int i, void* args);
 
-typedef struct {
-    char msg[BUFSIZE];
-    int size;
-}Message;
 
-typedef struct{
-    sem_t sem;
-    int count; // Number of messsages
-    Message message;
-}SharedMemory;
+// typedef struct {
+//     char msg[BUFSIZE];
+//     int size;
+// } Message;
 
-SharedMemory *sharedMem;
+// typedef struct {
+//     sem_t mutex;
+//     sem_t count;
+//     Message message;
+// } SharedMemory;
+
+// SharedMemory *sharedMem;
+
 
 void* input_Thread(void* item) {
     char* childID;
     childID = (char*)item;
 
     printf("We are in process %s", childID);
-    struct timespec sleeptime;
-    sleeptime.tv_sec = 0;
-    sleeptime.tv_nsec = 100000000L;
 
-    SharedMemory* sharedMem = malloc(sizeof(*sharedMem));
+    sem_t* mutex;
+    sem_t* count;
+    int shmid;
+
+    // Creating Shared Memory Segment
+    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
+    if (shmid == -1) {
+        perror("Creation of Shared Memory FAILED\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Ataching Memory Segment
+    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    count = mutex + 1;
+    char* message = (char*)(count + 1);
+
+    sem_init(mutex, 1, 1);
+    sem_init(count, 1, 0);
 
     while(1) {
         printf("Type any message to continue, and type #BYE# if you want to terminate the process\n");
         char input[MAX_SIZE_OF_MESSAGE];
         fgets(input, MAX_SIZE_OF_MESSAGE, stdin);
 
-        sem_wait(&(sharedMem->sem));
+        sem_wait(mutex);
 
         if (!strcmp(input, "#BYE#")) {
-            sem_post(&(sharedMem->sem));
+            // Releasing the semaphore
+            sem_post(mutex);
+
+            sem_wait(mutex);
+            strcpy(message, "#BYE#");
+            //sem_post(mutex);
+            sem_post(count);
             break;
         }
-        strncpy(sharedMem->message.msg, input, MAX_SIZE_OF_MESSAGE);
-        sharedMem->message.size = strlen(input);
-        sharedMem->count++;
+        strncpy(message, input, MAX_SIZE_OF_MESSAGE);
+        // Updating the count
+        sem_post(count);
 
-        sem_post(&(sharedMem->sem));
+        sem_post(mutex);
     }
+    int del;
+    del = shmdt(mutex);
 
-    free(sharedMem);
+    if (del == -1) {
+        printf("Deletion of shared memory failed\n");
+        return NULL;
+    }
+    //
+
     pthread_exit(NULL);
 }
 
@@ -65,20 +94,49 @@ void *receive_Thread(void *item) {
     char *childID;
     childID = (char *)item;
 
-    while (1) {
-        sem_wait(&sharedMem->count);
-        sem_wait(&sharedMem->sem);
+    printf("We are in process %s", childID);
 
-        if (!strcmp(sharedMem->message.msg, "#BYE#")) {
-            sem_post(&sharedMem->sem);
+    sem_t* mutex;
+    sem_t* count;
+    int shmid;
+
+    // Creating Shared Memory Segment
+    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
+    if (shmid == -1) {
+        perror("Creation of Shared Memory FAILED\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Ataching Memory Segment
+    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    count = mutex + 1;
+    char* message = (char*)(count + 1);
+
+    sem_init(mutex, 1, 1);
+    sem_init(count, 1, 0);
+
+
+    while (1) {
+        sem_wait(mutex);
+        sem_wait(count);
+
+        if (!strcmp(message, "#BYE#")) {
+            sem_post(mutex);
             break;
         }
 
-        // Process the received message (e.g., print or save to file)
-        printf("Received message: %s", sharedMem->message.msg);
+        printf("Received message: %s\n", message);
 
-        sem_post(&sharedMem->sem);
+        sem_post(mutex);
     }
+    int del;
+    del = shmdt(mutex);
+
+    if (del == -1) {
+        printf("Deletion of shared memory failed\n");
+        return NULL;
+    }
+    //
 
     pthread_exit(NULL);
 }
@@ -89,39 +147,60 @@ int main(int argc, char* argv[]) {
         printf("No arguments were given\n");
     }
     else {
-        printf("argument given is: %s \n", argv[1]);
+        for (int i = 1; i < argc; i++)
+            printf("argument  %d given is: %s \n", i, argv[i]);
     }
 
 
+    sem_t* mutex;
+    sem_t* count;
+    int shmid;
+
     // Creating Shared Memory Segment
-    int shmid = shmget(IPC_PRIVATE, sizeof(SharedMemory), (S_IRUSR|S_IWUSR));
+    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
     if (shmid == -1) {
         perror("Creation of Shared Memory FAILED\n");
         exit(EXIT_FAILURE);
     }
 
     // Ataching Memory Segment
-    sharedMem = (SharedMemory *)shmat(shmid, NULL, 0);
-    if ((void *)sharedMem == (void *)-1) {
-        perror("Failed to Atach Memory Segment");
+    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    count = mutex + 1;
+    //char* message = (char*)(count + 1);
+
+    sem_init(mutex, 1/*shared across processes*/, 1);
+    sem_init(count, 1, 0);
+
+    pthread_t recThread;
+    int res;
+
+    res = pthread_create(&recThread, NULL, receive_Thread, (void*)"B");
+    if (res != 0) {
+        printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
     }
 
-    sem_init(&sharedMem->sem, 1, 1);
-    sem_init(&sharedMem->count, 1, 0);
+    pthread_t inpThread;
+    int res2;
 
-    char* proc = "A";
-    int res1, res2;
-    pthread_t inputThread, receiveThread;
+    res2 = pthread_create(&inpThread, NULL, input_Thread, (void*)"A");
 
-    res1 = pthread_create(&inputThread, NULL, input_Thread, (void*)proc);
-
-    if (res1 != 0) {
-        printf("Thread Creation Failed\n");
+    if (res2 != 0) {
+        printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
     }
 
-    // res2 = pthread_create(&receiveThread, NULL, receive_Thread, (void*)proc);
+    pthread_join(inpThread, NULL);
+    pthread_join(recThread, NULL);
+
+    int del;
+    del = shmdt(mutex);
+
+    if (del == -1) {
+        printf("Deletion of shared memory failed\n");
+        return -1;
+    }
+    //
 
     return 0;
 }
