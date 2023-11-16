@@ -12,6 +12,8 @@
 #define BUFSIZE 1024
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
+void processB();
+
 typedef struct {
     char msg[BUFSIZE];
     int size;
