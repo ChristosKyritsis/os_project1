@@ -9,7 +9,7 @@
 #include <time.h>
 
 #define MAX_SIZE_OF_MESSAGE 15
-#define BUFSIZE 1024
+#define BUFSIZE 4096
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
 // void processB(int i, void* args);
@@ -28,15 +28,17 @@
 
 // SharedMemory *sharedMem;
 
+    sem_t* mutex;
+    sem_t* count;
+    char* bufferA;
+    char* bufferB;
 
-void* input_Thread(void* item) {
+void* inputThread(void* item) {
     char* childID;
     childID = (char*)item;
 
     printf("We are in process %s", childID);
-
-    sem_t* mutex;
-    sem_t* count;
+    
     int shmid;
 
     // Creating Shared Memory Segment
@@ -49,7 +51,7 @@ void* input_Thread(void* item) {
     // Ataching Memory Segment
     mutex = (sem_t*)shmat(shmid, NULL, 0);
     count = mutex + 1;
-    char* message = (char*)(count + 1);
+    bufferA = (char*)(count + 1);
 
     sem_init(mutex, 1, 1);
     sem_init(count, 1, 0);
@@ -66,12 +68,12 @@ void* input_Thread(void* item) {
             sem_post(mutex);
 
             sem_wait(mutex);
-            strcpy(message, "#BYE#");
+            strcpy(bufferA, "#BYE#");
             //sem_post(mutex);
             sem_post(count);
             break;
         }
-        strncpy(message, input, MAX_SIZE_OF_MESSAGE);
+        strncpy(bufferA, input, MAX_SIZE_OF_MESSAGE);
         // Updating the count
         sem_post(count);
 
@@ -90,16 +92,11 @@ void* input_Thread(void* item) {
 }
 
 
-void *receive_Thread(void *item) {
+void* receiveThread(void *item) {
     char *childID;
     childID = (char *)item;
 
-    printf("We are in process %s", childID);
-
-    sem_t* mutex;
-    sem_t* count;
     int shmid;
-
     // Creating Shared Memory Segment
     shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
     if (shmid == -1) {
@@ -110,7 +107,7 @@ void *receive_Thread(void *item) {
     // Ataching Memory Segment
     mutex = (sem_t*)shmat(shmid, NULL, 0);
     count = mutex + 1;
-    char* message = (char*)(count + 1);
+    bufferA = (char*)(count + 1);
 
     sem_init(mutex, 1, 1);
     sem_init(count, 1, 0);
@@ -120,12 +117,12 @@ void *receive_Thread(void *item) {
         sem_wait(mutex);
         sem_wait(count);
 
-        if (!strcmp(message, "#BYE#")) {
+        if (!strcmp(bufferA, "#BYE#")) {
             sem_post(mutex);
             break;
         }
 
-        printf("Received message: %s\n", message);
+        printf("Process %s received message: %s\n", childID, bufferA);
 
         sem_post(mutex);
     }
@@ -151,9 +148,6 @@ int main(int argc, char* argv[]) {
             printf("argument  %d given is: %s \n", i, argv[i]);
     }
 
-
-    sem_t* mutex;
-    sem_t* count;
     int shmid;
 
     // Creating Shared Memory Segment
@@ -174,7 +168,7 @@ int main(int argc, char* argv[]) {
     pthread_t recThread;
     int res;
 
-    res = pthread_create(&recThread, NULL, receive_Thread, (void*)"B");
+    res = pthread_create(&recThread, NULL, receiveThread, (void*)"B");
     if (res != 0) {
         printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
@@ -183,7 +177,7 @@ int main(int argc, char* argv[]) {
     pthread_t inpThread;
     int res2;
 
-    res2 = pthread_create(&inpThread, NULL, input_Thread, (void*)"A");
+    res2 = pthread_create(&inpThread, NULL, inputThread, (void*)"A");
 
     if (res2 != 0) {
         printf("Creation of thread failed\n");
@@ -201,6 +195,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     //
+    
 
     return 0;
 }
