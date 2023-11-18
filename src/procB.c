@@ -7,9 +7,10 @@
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
 #include <time.h>
+#include <stdint.h>
 
 #define MAX_SIZE_OF_MESSAGE 15
-#define BUFSIZE 4096
+#define BUFFSIZE 4096
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
 sem_t* mutex;
@@ -18,10 +19,10 @@ char* bufferA;
 char* bufferB;
 
 void* inputThreadB(void* item) {
-    char* childID;
-    childID = (char*)item;
+    // char* childID;
+    // childID = (char*)item;
 
-    printf("We are in process %s", childID);
+    //printf("We are in process %s", childID);
     
     int shmid;
 
@@ -33,9 +34,16 @@ void* inputThreadB(void* item) {
     }
 
     // Ataching Memory Segment
-    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    void* address = shmat(shmid, NULL, 0);
+    if (address == (void*)-1) {
+        printf("Failed to attach memory segment\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    mutex = (sem_t*)address;
     count = mutex + 1;
-    bufferB = (char*)(count + 1);
+    char* bufferB = (char*)(count + 1);
 
     // sem_init(mutex, 1, 1);
     // sem_init(count, 1, 0);
@@ -76,8 +84,8 @@ void* inputThreadB(void* item) {
 }
 
 void* receiveThreadB(void* item) {
-    char *childID;
-    childID = (char *)item;
+    // char *childID;
+    // childID = (char *)item;
 
     int shmid;
 
@@ -89,12 +97,19 @@ void* receiveThreadB(void* item) {
     }
 
     // Ataching Memory Segment
-    mutex = (sem_t*)shmat(shmid, NULL, 0);
-    count = mutex + 1;
-    bufferB = (char*)(count + 1);
+    void* address = shmat(shmid, NULL, 0);
+    if (address == (void*)-1) {
+        printf("Failed to attach memory segment\n");
+        exit(EXIT_FAILURE);
+    }
 
-    // sem_init(mutex, 1, 1);
-    // sem_init(count, 1, 0);
+
+    mutex = (sem_t*)address;
+    count = mutex + 1;
+    char* bufferB = (char*)(count + 1);
+
+    sem_init(mutex, 1, 1);
+    sem_init(count, 1, 0);
 
 
     while (1) {
@@ -106,7 +121,7 @@ void* receiveThreadB(void* item) {
             break;
         }
 
-        printf("Process %s Received message: %s\n",childID, bufferB);
+        printf("Process B Received message: %s\n", bufferB);
 
         sem_post(mutex);
     }

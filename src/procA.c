@@ -7,12 +7,16 @@
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
 #include <time.h>
+#include <stdint.h>
 
 #define MAX_SIZE_OF_MESSAGE 15
-#define BUFSIZE 4096
+#define BUFFSIZE 4096
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
-// void processB(int i, void* args);
+void* inputThreadB(void* item);
+void* receiveThreadB(void* item);
+
+
 
 
 // typedef struct {
@@ -34,10 +38,10 @@
     char* bufferB;
 
 void* inputThread(void* item) {
-    char* childID;
-    childID = (char*)item;
+    // char* childID;
+    // childID = (char*)item;
 
-    printf("We are in process %s", childID);
+    //printf("We are in process %s\n", childID);
     
     int shmid;
 
@@ -49,9 +53,16 @@ void* inputThread(void* item) {
     }
 
     // Ataching Memory Segment
-    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    void* address = shmat(shmid, NULL, 0);
+    if (address == (void*)-1) {
+        printf("Failed to attach memory segment\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    mutex = (sem_t*)address;
     count = mutex + 1;
-    bufferA = (char*)(count + 1);
+    char* bufferA = (char*)(count + 1);
 
     sem_init(mutex, 1, 1);
     sem_init(count, 1, 0);
@@ -92,12 +103,12 @@ void* inputThread(void* item) {
 }
 
 
-void* receiveThread(void *item) {
-    char *childID;
-    childID = (char *)item;
+void* receiveThread(void* item) {
+    // char *childID;
+    // childID = (char *)item;
 
     int shmid;
-    // Creating Shared Memory Segment
+    //Creating Shared Memory Segment
     shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
     if (shmid == -1) {
         perror("Creation of Shared Memory FAILED\n");
@@ -105,9 +116,16 @@ void* receiveThread(void *item) {
     }
 
     // Ataching Memory Segment
-    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    void* address = shmat(shmid, NULL, 0);
+    if (address == (void*)-1) {
+        printf("Failed to attach memory segment\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    mutex = (sem_t*)address;
     count = mutex + 1;
-    bufferA = (char*)(count + 1);
+    char* bufferA = (char*)(count + 1);
 
     sem_init(mutex, 1, 1);
     sem_init(count, 1, 0);
@@ -122,7 +140,7 @@ void* receiveThread(void *item) {
             break;
         }
 
-        printf("Process %s received message: %s\n", childID, bufferA);
+        printf("Process A received message: %s\n", bufferA);
 
         sem_post(mutex);
     }
@@ -145,22 +163,28 @@ int main(int argc, char* argv[]) {
     }
     else {
         for (int i = 1; i < argc; i++)
-            printf("argument  %d given is: %s \n", i, argv[i]);
+            printf("argument  %d given is : %s \n", i, argv[i]);
     }
 
     int shmid;
 
-    // Creating Shared Memory Segment
-    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
+    // Creating Shared Memory Segment with size for two semaphors and two buffers
+    shmid = shmget(IPC_PRIVATE, sizeof(sem_t) + sizeof(sem_t) + BUFFSIZE + BUFFSIZE, (S_IRUSR|S_IWUSR));
     if (shmid == -1) {
         perror("Creation of Shared Memory FAILED\n");
         exit(EXIT_FAILURE);
     }
 
     // Ataching Memory Segment
-    mutex = (sem_t*)shmat(shmid, NULL, 0);
+    void* address = shmat(shmid, NULL, 0);
+    if (address == (void*)-1) {
+        printf("Failed to attach memory segment\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    mutex = (sem_t*)address;
     count = mutex + 1;
-    //char* message = (char*)(count + 1);
 
     sem_init(mutex, 1/*shared across processes*/, 1);
     sem_init(count, 1, 0);
@@ -168,7 +192,7 @@ int main(int argc, char* argv[]) {
     pthread_t recThread;
     int res;
 
-    res = pthread_create(&recThread, NULL, receiveThread, (void*)"B");
+    res = pthread_create(&recThread, NULL, receiveThread, (void*)address);
     if (res != 0) {
         printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
@@ -177,12 +201,33 @@ int main(int argc, char* argv[]) {
     pthread_t inpThread;
     int res2;
 
-    res2 = pthread_create(&inpThread, NULL, inputThread, (void*)"A");
+    res2 = pthread_create(&inpThread, NULL, inputThread, (void*)address);
 
     if (res2 != 0) {
         printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
     }
+
+
+    pthread_t recThreadB;
+
+    int resB1;
+    resB1 = pthread_create(&recThreadB, NULL, receiveThreadB, (void*)address);
+    if (resB1 != 0) {
+        printf("Creation of thread failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_t inpThreadB;
+    int resB2;
+
+    resB2 = pthread_create(&inpThreadB, NULL, inputThreadB, (void*)address);
+
+    if (resB2 != 0) {
+        printf("Creation of thread failed\n");
+        exit(EXIT_FAILURE);
+    }
+
 
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
