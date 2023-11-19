@@ -116,7 +116,7 @@ void* receiveThreadB(void* item) {
         sem_wait(mutex);
         sem_wait(count);
 
-        if (!strcmp(bufferB, "#BYE#")) {
+        if (strcmp(bufferB, "#BYE#\n") == 0) {
             sem_post(mutex);
             break;
         }
