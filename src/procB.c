@@ -7,7 +7,8 @@
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
 #include <time.h>
-#include <stdint.h>
+
+#include "inc.h"
 
 #define MAX_SIZE_OF_MESSAGE 15
 #define BUFFSIZE 4096
