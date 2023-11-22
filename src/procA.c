@@ -10,7 +10,6 @@
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
 #include <sys/time.h>
-#include <stdbool.h>
 
 
 #include "inc.h"
@@ -79,9 +78,14 @@ void* receive_thread(void* arg) {
 
 
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        printf("No arguments given on command line\n");
+        exit(EXIT_FAILURE);
+    }
     // Creation of shared memory
+    char* shmpath = argv[1];
     int fd;
-    fd = shm_open(argv[1], O_CREAT | O_EXCL | O_RDWR, 0666);
+    fd = shm_open(shmpath, O_CREAT | O_EXCL | O_RDWR, 0666);
     if (fd == -1) {
         printf("Error on opening shared memory segment\n");
         exit(EXIT_FAILURE);
@@ -121,8 +125,8 @@ int main(int argc, char* argv[]) {
     pthread_join(recThread, NULL);
 
     free_data(data);
-    munmap(data, sizeof(SharedData));
-    unlink(argv[1]);
+    munmap(data, sizeof(*data));
+    unlink(shmpath);
 
     return 0;
 }

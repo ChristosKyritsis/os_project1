@@ -19,7 +19,7 @@
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab might delete later
 
 
-void* input_thread(void* arg) {
+void* input_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
 
     while (true) {
@@ -40,7 +40,7 @@ void* input_thread(void* arg) {
 }
 
 
-void* receive_thread(void* arg) {
+void* receive_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
     struct timeval begin, end;
     double totalTime = 0.0;
@@ -78,6 +78,11 @@ void* receive_thread(void* arg) {
 
 
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        printf("No arguments given on command line\n");
+        exit(EXIT_FAILURE);
+    }
+    
     int fd;
     fd = shm_open(argv[1], O_RDWR, 0666);
     if (fd == -1) {
@@ -95,14 +100,14 @@ int main(int argc, char* argv[]) {
     int res1, res2;
     pthread_t inpThread, recThread;
 
-    res1 = pthread_create(&recThread, NULL, receive_thread, (void*)data);
+    res1 = pthread_create(&recThread, NULL, receive_thread_B, (void*)data);
     if (res1 != 0) {
         printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
     }
 
   
-    res2 = pthread_create(&inpThread, NULL, input_thread, (void*)data);
+    res2 = pthread_create(&inpThread, NULL, input_thread_B, (void*)data);
 
     if (res2 != 0) {
         printf("Creation of thread failed\n");
