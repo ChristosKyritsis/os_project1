@@ -1,21 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h> // Creating and managing shared memory
-#include <unistd.h> // ?
+#include <unistd.h> // 
+#include <sys/types.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <sys/stat.h> // for (S_IRUSR|S_IWUSR)
 #include <sys/mman.h>
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
 #include <sys/time.h>
-#include <time.h>
 #include <stdbool.h>
 
+
 #include "inc.h"
+
+#define _POSIX_C_SOURCE 200809L
 
 #define MAX_SIZE_OF_MESSAGE 15
 
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
+
+
+int ftruncate(int fd, off_t length);
 
 
 void* input_thread(void* arg) {
@@ -23,11 +30,11 @@ void* input_thread(void* arg) {
 
     while (true) {
         printf("Please enter any message for Process B or type #BYE# to terminate the process:");
-        fgets(data->message, MAX_SIZE_OF_MESSAGE, stdin);
+        fgets(data->messageA, MAX_SIZE_OF_MESSAGE, stdin);
 
         sem_post(&data->sem);
 
-        if (strcmp(data->message, "#BYE#\n") == 0) {
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->sem);       // ending the process
             break;
@@ -48,20 +55,19 @@ void* receive_thread(void* arg) {
         if (data->finished == true) 
             break;
 
-        print("Process B sent: %s\n", data->message);
+        printf("Process B sent: %s\n", data->messageB);
 
         gettimeofday(&end, NULL);
 
         data->count++;
-        data->numOfPieces += strlen(data->message);
+        data->numOfPieces += strlen(data->messageB);
 
         printf("Please enter any message for Process B or type #BYE# to terminate the process:");
-        fgets(data->message, MAX_SIZE_OF_MESSAGE, stdin);
-
         gettimeofday(&begin, NULL);
+        fgets(data->messageA, MAX_SIZE_OF_MESSAGE, stdin);
         sem_post(&data->sem);
 
-        if (strcmp(data->message, "#BYE#\n") == 0) {
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->sem);       // ending the process
             break;
@@ -75,12 +81,12 @@ void* receive_thread(void* arg) {
 int main(int argc, char* argv[]) {
     // Creation of shared memory
     int fd;
-    fd = shm_open(argv[1], 0_CREAT | 0_EXCL | 0_RDWR, 0666);
+    fd = shm_open(argv[1], O_CREAT | O_EXCL | O_RDWR, 0666);
     if (fd == -1) {
         printf("Error on opening shared memory segment\n");
         exit(EXIT_FAILURE);
     }
-
+    
     int trunc;
     trunc = ftruncate(fd, sizeof(SharedData));
     if (trunc == -1) {

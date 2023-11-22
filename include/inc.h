@@ -6,7 +6,8 @@
 typedef struct {
     bool finished;
     sem_t sem;
-    char message[BUFFSIZE];
+    char messageA[BUFFSIZE];
+    char messageB[BUFFSIZE];
     int count;
     int numOfPieces;
     double waitingTime;

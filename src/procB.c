@@ -2,138 +2,119 @@
 #include <stdlib.h>
 #include <semaphore.h> // Functions that are semaphore-related
 #include <sys/ipc.h> // Creating and managing shared memory
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 #include <sys/shm.h> // Creating and managing shared memory
 #include <sys/stat.h> // for (S_IRUSR|S_IWUSR)
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
-#include <time.h>
+#include <sys/time.h>
 
 #include "inc.h"
 
 #define MAX_SIZE_OF_MESSAGE 15
 #define BUFFSIZE 4096
-#define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
-
-sem_t* mutex;
-sem_t* count;
-char* bufferA;
-char* bufferB;
-
-void* inputThreadB(void* item) {
-    // char* childID;
-    // childID = (char*)item;
-
-    //printf("We are in process %s", childID);
-    
-    int shmid;
-
-    // Creating Shared Memory Segment
-    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
-    if (shmid == -1) {
-        perror("Creation of Shared Memory FAILED\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Ataching Memory Segment
-    void* address = shmat(shmid, NULL, 0);
-    if (address == (void*)-1) {
-        printf("Failed to attach memory segment\n");
-        exit(EXIT_FAILURE);
-    }
+#define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab might delete later
 
 
-    mutex = (sem_t*)address;
-    count = mutex + 1;
-    char* bufferB = (char*)(count + 1);
+void* input_thread(void* arg) {
+    SharedData* data = (SharedData*)arg;
 
-    // sem_init(mutex, 1, 1);
-    // sem_init(count, 1, 0);
+    while (true) {
+        printf("Process A sent: %s", data->messageA);
+        printf("Please enter any message for Process A or type #BYE# to terminate the process:");
 
-    while(1) {
-        printf("Type any message to continue, and type #BYE# if you want to terminate the process\n");
-        char input[MAX_SIZE_OF_MESSAGE];
-        fgets(input, MAX_SIZE_OF_MESSAGE, stdin);
+        fgets(data->messageB, MAX_SIZE_OF_MESSAGE, stdin);
+        sem_post(&data->sem);
 
-        sem_wait(mutex);
-
-        if (!strcmp(input, "#BYE#")) {
-            // Releasing the semaphore
-            sem_post(mutex);
-
-            sem_wait(mutex);
-            strcpy(bufferB, "#BYE#");
-            //sem_post(mutex);
-            sem_post(count);
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+            data->finished = true;
+            sem_post(&data->sem);
             break;
         }
-        strncpy(bufferB, input, MAX_SIZE_OF_MESSAGE);
-        // Updating the count
-        sem_post(count);
-
-        sem_post(mutex);
     }
-    int del;
-    del = shmdt(mutex);
-
-    if (del == -1) {
-        printf("Deletion of shared memory failed\n");
-        return NULL;
-    }
-    //
 
     pthread_exit(NULL);
 }
 
-void* receiveThreadB(void* item) {
-    // char *childID;
-    // childID = (char *)item;
 
-    int shmid;
+void* receive_thread(void* arg) {
+    SharedData* data = (SharedData*)arg;
+    struct timeval begin, end;
+    double totalTime = 0.0;
 
-    // Creating Shared Memory Segment
-    shmid = shmget(IPC_PRIVATE, sizeof(sem_t), (S_IRUSR|S_IWUSR));
-    if (shmid == -1) {
-        perror("Creation of Shared Memory FAILED\n");
-        exit(EXIT_FAILURE);
-    }
+    while (true) {
+        sem_wait(&data->sem);
 
-    // Ataching Memory Segment
-    void* address = shmat(shmid, NULL, 0);
-    if (address == (void*)-1) {
-        printf("Failed to attach memory segment\n");
-        exit(EXIT_FAILURE);
-    }
+        if (data->finished == true)
+            break;
 
+        printf("Process A sent: %s", data->messageA);
+        
+        gettimeofday(&end, NULL);
+        totalTime = end.tv_sec - begin.tv_sec;
 
-    mutex = (sem_t*)address;
-    count = mutex + 1;
-    char* bufferB = (char*)(count + 1);
+        data->count++;
+        data->numOfPieces +=strlen(data->messageA);
+        data->waitingTime += totalTime;
 
-    sem_init(mutex, 1, 1);
-    sem_init(count, 1, 0);
+        printf("Please enter any message for Process A or type #BYE# to terminate the process:");
+        gettimeofday(&begin, NULL);
+        fgets(data->messageB, MAX_SIZE_OF_MESSAGE, stdin);
+        sem_post(&data->sem);
 
-
-    while (1) {
-        sem_wait(mutex);
-        sem_wait(count);
-
-        if (strcmp(bufferB, "#BYE#\n") == 0) {
-            sem_post(mutex);
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+            data->finished = true;
+            sem_post(&data->sem);
             break;
         }
 
-        printf("Process B Received message: %s\n", bufferB);
-
-        sem_post(mutex);
     }
-    int del;
-    del = shmdt(mutex);
-
-    if (del == -1) {
-        printf("Deletion of shared memory failed\n");
-        return NULL;
-    }
-    //
 
     pthread_exit(NULL);
+}
+
+
+int main(int argc, char* argv[]) {
+    int fd;
+    fd = shm_open(argv[1], O_RDWR, 0666);
+    if (fd == -1) {
+        printf("Failed to open shared memory\n");
+        exit(EXIT_FAILURE);
+    }
+
+    SharedData* data = (SharedData*)mmap(NULL, sizeof(SharedData), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (data == MAP_FAILED) {
+        exit(EXIT_FAILURE);
+    }
+
+    initialize_data(data);
+
+    int res1, res2;
+    pthread_t inpThread, recThread;
+
+    res1 = pthread_create(&recThread, NULL, receive_thread, (void*)data);
+    if (res1 != 0) {
+        printf("Creation of thread failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+  
+    res2 = pthread_create(&inpThread, NULL, input_thread, (void*)data);
+
+    if (res2 != 0) {
+        printf("Creation of thread failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_join(inpThread, NULL);
+    pthread_join(recThread, NULL);
+
+    free_data(data);
+    munmap(data, sizeof(SharedData));
+    unlink(argv[1]);
+
+    return 0;
 }
