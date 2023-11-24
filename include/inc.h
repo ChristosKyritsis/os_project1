@@ -1,11 +1,12 @@
 #include <semaphore.h>
 #include <stdbool.h>
 
-#define BUFFSIZE 4096
+#define BUFFSIZE 1024
 
 typedef struct {
     bool finished;
-    sem_t sem;
+    sem_t semA;
+    sem_t semB;
     char messageA[BUFFSIZE];
     char messageB[BUFFSIZE];
     int count;

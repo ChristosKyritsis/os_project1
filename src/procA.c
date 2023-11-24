@@ -23,19 +23,20 @@
 
 int ftruncate(int fd, off_t length);
 
-
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
+    char msg[BUFFSIZE];
+    
+        while (true) {
+        printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
+        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        memcpy(&data->messageA, msg, strlen(msg));
 
-    while (true) {
-        printf("Please enter any message for Process B or type #BYE# to terminate the process:");
-        fgets(data->messageA, MAX_SIZE_OF_MESSAGE, stdin);
+        sem_post(&data->semA);
 
-        sem_post(&data->sem);
-
-        if (strcmp(data->messageA, "#BYE#\n") == 0) {
+        if (strcmp(data->messageA, "#BYE#") == 0) {
             data->finished = true;
-            sem_post(&data->sem);       // ending the process
+            sem_post(&data->semA);       // ending the process
             break;
         }
     }
@@ -46,10 +47,11 @@ void* input_thread(void* arg) {
 
 void* receive_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
+    char msg[BUFFSIZE];
     struct timeval begin, end;
 
     while (true) {
-        sem_wait(&data->sem);
+        sem_wait(&data->semB);
 
         if (data->finished == true) 
             break;
@@ -61,14 +63,15 @@ void* receive_thread(void* arg) {
         data->count++;
         data->numOfPieces += strlen(data->messageB);
 
-        printf("Please enter any message for Process B or type #BYE# to terminate the process:");
+        printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        fgets(data->messageA, MAX_SIZE_OF_MESSAGE, stdin);
-        sem_post(&data->sem);
+        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        memcpy(&data->messageA, msg, strlen(msg));
+        sem_post(&data->semA);
 
-        if (strcmp(data->messageA, "#BYE#\n") == 0) {
+        if (strcmp(data->messageA, "#BYE#") == 0) {
             data->finished = true;
-            sem_post(&data->sem);       // ending the process
+            sem_post(&data->semA);       // ending the process
             break;
         }
     }
@@ -125,7 +128,8 @@ int main(int argc, char* argv[]) {
     pthread_join(recThread, NULL);
 
     free_data(data);
-    munmap(data, sizeof(*data));
+    munmap(data, sizeof(SharedData));
+    close(fd);
     unlink(shmpath);
 
     return 0;

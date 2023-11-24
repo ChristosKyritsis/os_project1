@@ -15,23 +15,24 @@
 #include "inc.h"
 
 #define MAX_SIZE_OF_MESSAGE 15
-#define BUFFSIZE 4096
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab might delete later
 
 
 void* input_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
+    char msg[BUFFSIZE];
 
     while (true) {
-        printf("Process A sent: %s", data->messageA);
-        printf("Please enter any message for Process A or type #BYE# to terminate the process:");
+        printf("Process A sent: %s\n", data->messageA);
+        printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
 
-        fgets(data->messageB, MAX_SIZE_OF_MESSAGE, stdin);
-        sem_post(&data->sem);
+        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        memcpy(&data->messageB, msg, strlen(msg));
+        sem_post(&data->semB);
 
-        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+        if (strcmp(data->messageB, "#BYE#") == 0) {
             data->finished = true;
-            sem_post(&data->sem);
+            sem_post(&data->semB);
             break;
         }
     }
@@ -42,16 +43,17 @@ void* input_thread_B(void* arg) {
 
 void* receive_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
+    char msg[BUFFSIZE];
     struct timeval begin, end;
     double totalTime = 0.0;
 
     while (true) {
-        sem_wait(&data->sem);
+        sem_wait(&data->semA);
 
         if (data->finished == true)
             break;
 
-        printf("Process A sent: %s", data->messageA);
+        printf("Process A sent: %s\n", data->messageA);
         
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
@@ -60,14 +62,15 @@ void* receive_thread_B(void* arg) {
         data->numOfPieces +=strlen(data->messageA);
         data->waitingTime += totalTime;
 
-        printf("Please enter any message for Process A or type #BYE# to terminate the process:");
+        printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        fgets(data->messageB, MAX_SIZE_OF_MESSAGE, stdin);
-        sem_post(&data->sem);
+        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        memcpy(&data->messageB, msg, strlen(msg));
+        sem_post(&data->semB);
 
-        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+        if (strcmp(data->messageB, "#BYE#") == 0) {
             data->finished = true;
-            sem_post(&data->sem);
+            sem_post(&data->semB);
             break;
         }
 
@@ -119,7 +122,7 @@ int main(int argc, char* argv[]) {
 
     free_data(data);
     munmap(data, sizeof(SharedData));
-    unlink(argv[1]);
+    //unlink(argv[1]);
 
     return 0;
 }
