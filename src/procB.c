@@ -58,9 +58,9 @@ void* receive_thread_B(void* arg) {
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
 
-        data->count++;
-        data->numOfPieces +=strlen(data->messageA);
-        data->waitingTime += totalTime;
+        data->countB++;
+        data->numOfPiecesB +=strlen(data->messageA);
+        data->waitingTimeB += totalTime;
 
         printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);

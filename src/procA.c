@@ -1,27 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/shm.h> // Creating and managing shared memory
-#include <unistd.h> // 
-#include <sys/types.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <sys/stat.h> // for (S_IRUSR|S_IWUSR)
-#include <sys/mman.h>
-#include <string.h>
-#include <pthread.h> // Used for creating and managing threads
-#include <sys/time.h>
-
+#define _POSIX_C_SOURCE 200112L
 
 #include "inc.h"
 
-#define _POSIX_C_SOURCE 200809L
+//#define _POSIX_C_SOURCE 200809L
 
 #define MAX_SIZE_OF_MESSAGE 15
 
 #define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
 
-
-int ftruncate(int fd, off_t length);
 
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
@@ -49,6 +35,7 @@ void* receive_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
     char msg[BUFFSIZE];
     struct timeval begin, end;
+    double totalTime = 0.0;
 
     while (true) {
         sem_wait(&data->semB);
@@ -59,9 +46,11 @@ void* receive_thread(void* arg) {
         printf("Process B sent: %s\n", data->messageB);
 
         gettimeofday(&end, NULL);
+        totalTime = end.tv_sec - begin.tv_sec;
 
-        data->count++;
-        data->numOfPieces += strlen(data->messageB);
+        data->countA++;
+        data->numOfPiecesA += strlen(data->messageB);
+        data->waitingTimeA += totalTime;
 
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
@@ -127,6 +116,7 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
+    print_data(data);
     free_data(data);
     munmap(data, sizeof(SharedData));
     close(fd);
