@@ -1,17 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <semaphore.h> // Functions that are semaphore-related
-#include <sys/ipc.h> // Creating and managing shared memory
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/shm.h> // Creating and managing shared memory
-#include <sys/stat.h> // for (S_IRUSR|S_IWUSR)
-#include <string.h>
-#include <pthread.h> // Used for creating and managing threads
-#include <sys/time.h>
-
 #include "inc.h"
 
 #define MAX_SIZE_OF_MESSAGE 15
@@ -30,7 +16,7 @@ void* input_thread_B(void* arg) {
         memcpy(&data->messageB, msg, strlen(msg));
         sem_post(&data->semB);
 
-        if (strcmp(data->messageB, "#BYE#") == 0) {
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semB);
             break;
@@ -68,7 +54,7 @@ void* receive_thread_B(void* arg) {
         memcpy(&data->messageB, msg, strlen(msg));
         sem_post(&data->semB);
 
-        if (strcmp(data->messageB, "#BYE#") == 0) {
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semB);
             break;

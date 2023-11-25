@@ -12,15 +12,23 @@
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
     char msg[BUFFSIZE];
+    size_t position = 0;
     
         while (true) {
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        memcpy(&data->messageA, msg, strlen(msg));
+        if (strlen(msg) <= 15)
+            memcpy(&data->messageA, msg, strlen(msg));
+        else {
+            for (int i = 0; i < strlen(msg); i += 15) {
+                position += i;
+                memcpy(&data->messageA, msg + position, strlen(msg) - position);
+            }
+        } 
 
         sem_post(&data->semA);
 
-        if (strcmp(data->messageA, "#BYE#") == 0) {
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
             break;
@@ -58,7 +66,7 @@ void* receive_thread(void* arg) {
         memcpy(&data->messageA, msg, strlen(msg));
         sem_post(&data->semA);
 
-        if (strcmp(data->messageA, "#BYE#") == 0) {
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
             break;
