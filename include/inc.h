@@ -19,6 +19,7 @@ typedef struct {
     bool finished;
     sem_t semA;
     sem_t semB;
+    sem_t terminatingSem;
     char messageA[BUFFSIZE];
     char messageB[BUFFSIZE];
     int countA;

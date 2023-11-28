@@ -14,10 +14,11 @@ void* input_thread(void* arg) {
     char msg[BUFFSIZE];
     size_t position = 0;
     
-        while (true) {
+    while (true) {
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        if (strlen(msg) <= 15)
+        sem_wait(&data->terminatingSem);
+        if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
             memcpy(&data->messageA, msg, strlen(msg));
         else {
             for (int i = 0; i < strlen(msg); i += 15) {
@@ -31,6 +32,8 @@ void* input_thread(void* arg) {
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
+            sem_post(&data->terminatingSem);
+            pthread_exit(NULL);
             break;
         }
     }
@@ -53,6 +56,8 @@ void* receive_thread(void* arg) {
 
         printf("Process B sent: %s\n", data->messageB);
 
+        sem_wait(&data->terminatingSem);
+
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
 
@@ -69,11 +74,13 @@ void* receive_thread(void* arg) {
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
+            sem_post(&data->terminatingSem);
+            pthread_exit(NULL);
             break;
         }
     }
-
-    pthread_exit(NULL);
+    
+    // pthread_exit(NULL);
 }
 
 
