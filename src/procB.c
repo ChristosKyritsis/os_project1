@@ -14,7 +14,7 @@ void* input_thread_B(void* arg) {
         printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
 
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        sem_wait(&data->terminatingSem);
+        
         memcpy(&data->messageB, msg, strlen(msg));
         sem_post(&data->semB);
 

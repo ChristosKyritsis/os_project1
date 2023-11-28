@@ -15,9 +15,10 @@ void* input_thread(void* arg) {
     size_t position = 0;
     
     while (true) {
+        printf("Process B sent: %s\n", data->messageB);
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        sem_wait(&data->terminatingSem);
+        
         if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
             memcpy(&data->messageA, msg, strlen(msg));
         else {
