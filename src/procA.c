@@ -33,8 +33,8 @@ void* input_thread(void* arg) {
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
-            sem_post(&data->terminatingSem);
-            pthread_exit(NULL);
+            print_data(data);
+            //sem_post(&data->terminatingSem);
             break;
         }
     }
@@ -45,7 +45,7 @@ void* input_thread(void* arg) {
 
 void* receive_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
-    char msg[BUFFSIZE];
+    //char msg[BUFFSIZE];
     struct timeval begin, end;
     double totalTime = 0.0;
 
@@ -55,7 +55,7 @@ void* receive_thread(void* arg) {
         if (data->finished == true) 
             break;
 
-        printf("Process B sent: %s\n", data->messageB);
+        //printf("Process B sent: %s\n", data->messageB);
 
         sem_wait(&data->terminatingSem);
 
@@ -66,22 +66,21 @@ void* receive_thread(void* arg) {
         data->numOfPiecesA += strlen(data->messageB);
         data->waitingTimeA += totalTime;
 
-        printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
+        //printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        memcpy(&data->messageA, msg, strlen(msg));
-        sem_post(&data->semA);
+        // fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        // memcpy(&data->messageA, msg, strlen(msg));
+        // sem_post(&data->semA);
 
-        if (strcmp(data->messageA, "#BYE#\n") == 0) {
-            data->finished = true;
-            sem_post(&data->semA);       // ending the process
-            sem_post(&data->terminatingSem);
-            pthread_exit(NULL);
-            break;
-        }
+        // if (strcmp(data->messageA, "#BYE#\n") == 0) {
+        //     data->finished = true;
+        //     sem_post(&data->semA);       // ending the process
+        //     sem_post(&data->terminatingSem);
+        //     break;
+        // }
     }
     
-    // pthread_exit(NULL);
+    pthread_exit(NULL);
 }
 
 
@@ -90,6 +89,7 @@ int main(int argc, char* argv[]) {
         printf("No arguments given on command line\n");
         exit(EXIT_FAILURE);
     }
+    
     // Creation of shared memory
     char* shmpath = argv[1];
     int fd;
@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
 
     int res1, res2;
     pthread_t inpThread, recThread;
+
 
     res1 = pthread_create(&recThread, NULL, receive_thread, (void*)data);
     if (res1 != 0) {

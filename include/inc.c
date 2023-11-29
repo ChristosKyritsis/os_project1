@@ -2,7 +2,7 @@
 
 
 void initialize_data(SharedData* data) {
-    sem_init(&data->semA, 1, 0);        // second argument is 1 because the semaphores are shared
+    sem_init(&data->semA, 1, 1);        // second argument is 1 because the semaphores are shared
     sem_init(&data->semB, 1, 0);        // between two processes
     sem_init(&data->terminatingSem, 1, 0);
     data->countA = 0;

@@ -9,7 +9,6 @@ void* input_thread_B(void* arg) {
     char msg[BUFFSIZE];
 
     while (true) {
-
         printf("Process A sent: %s\n", data->messageA);
         printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
 
@@ -21,19 +20,17 @@ void* input_thread_B(void* arg) {
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semB);
-            sem_post(&data->terminatingSem);
-            pthread_exit(NULL);
+            //sem_post(&data->terminatingSem);
             break;
         }
     }
-
     pthread_exit(NULL);
 }
 
 
 void* receive_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
-    char msg[BUFFSIZE];
+    //char msg[BUFFSIZE];
     struct timeval begin, end;
     double totalTime = 0.0;
 
@@ -43,7 +40,7 @@ void* receive_thread_B(void* arg) {
         if (data->finished == true)
             break;
 
-        printf("Process A sent: %s\n", data->messageA);
+        //printf("Process A sent: %s\n", data->messageA);
         
         sem_wait(&data->terminatingSem);
 
@@ -54,19 +51,18 @@ void* receive_thread_B(void* arg) {
         data->numOfPiecesB +=strlen(data->messageA);
         data->waitingTimeB += totalTime;
 
-        printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
+        // printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        memcpy(&data->messageB, msg, strlen(msg));
-        sem_post(&data->semB);
+        // fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
+        // memcpy(&data->messageB, msg, strlen(msg));
+        // sem_post(&data->semB);
 
-        if (strcmp(data->messageB, "#BYE#\n") == 0) {
-            data->finished = true;
-            sem_post(&data->semB);
-            sem_post(&data->terminatingSem);
-            pthread_exit(NULL);
-            break;
-        }
+        // if (strcmp(data->messageB, "#BYE#\n") == 0) {
+        //     data->finished = true;
+        //     sem_post(&data->semB);
+        //     sem_post(&data->terminatingSem);
+        //     break;
+        // }
 
     }
 
