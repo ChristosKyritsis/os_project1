@@ -55,14 +55,14 @@ void* receive_thread(void* arg) {
         sem_wait(&data->semB);
 
         if (data->finished == true) {
-            print_data(data);
+            //print_data(data);
             break;        
         }
             
 
-        printf("Process B sent: %s\n", data->messageB);
+        printf("Process B sent: %s\n\n", data->messageB);
 
-        sem_wait(&data->terminatingSem);
+        //sem_wait(&data->terminatingSem);
 
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;

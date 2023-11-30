@@ -15,11 +15,16 @@ void* input_thread_B(void* arg) {
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
         
         memcpy(&data->messageB, msg, strlen(msg));
+
+        data->countB++;
+        data->numOfPiecesB += strlen(msg);
+
         sem_post(&data->semB);
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
             sem_post(&data->semB);
+            print_data(data);
             //sem_post(&data->terminatingSem);
             break;
         }
@@ -42,7 +47,7 @@ void* receive_thread_B(void* arg) {
 
         //printf("Process A sent: %s\n", data->messageA);
         
-        sem_wait(&data->terminatingSem);
+        //sem_wait(&data->terminatingSem);
 
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
