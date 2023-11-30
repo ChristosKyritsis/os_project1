@@ -15,10 +15,12 @@ void* input_thread(void* arg) {
     size_t position = 0;
     
     while (true) {
-        printf("Process B sent: %s\n", data->messageB);
+        //printf("Process B sent: %s\n", data->messageB);
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        
+        data->countA++;
+        data->numOfPiecesA += strlen(msg);
+
         if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
             memcpy(&data->messageA, msg, strlen(msg));
         else {
@@ -52,10 +54,13 @@ void* receive_thread(void* arg) {
     while (true) {
         sem_wait(&data->semB);
 
-        if (data->finished == true) 
-            break;
+        if (data->finished == true) {
+            print_data(data);
+            break;        
+        }
+            
 
-        //printf("Process B sent: %s\n", data->messageB);
+        printf("Process B sent: %s\n", data->messageB);
 
         sem_wait(&data->terminatingSem);
 
@@ -110,6 +115,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    close(fd);
+
     initialize_data(data);
 
     int res1, res2;
@@ -136,8 +143,8 @@ int main(int argc, char* argv[]) {
     print_data(data);
     free_data(data);
     munmap(data, sizeof(SharedData));
-    close(fd);
-    unlink(shmpath);
+    //close(fd);
+    shm_unlink(shmpath);
 
     return 0;
 }

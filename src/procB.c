@@ -88,7 +88,10 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    initialize_data(data);
+    close(fd);
+
+
+    //initialize_data(data);
 
     int res1, res2;
     pthread_t inpThread, recThread;

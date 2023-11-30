@@ -20,7 +20,9 @@ void print_data(SharedData* data) {
         printf("Number of messages process A has sent: %d\n", data->countA);
         printf("Number of messages process A has received: %d\n", data->countB);
         printf("Number of messages process B has sent: %d\n", data->countB);
-        printf("Number of messages process A has received: %d\n", data->countA);
+        printf("Number of messages process B has received: %d\n", data->countA);
+        printf("Waiting time in procees A: %f", data->waitingTimeA);
+        printf("Waiting time in procees B: %f", data->waitingTimeB);
     }
     else {
         printf("Empty\n");
