@@ -13,7 +13,7 @@
 #include <semaphore.h>
 #include <stdbool.h>
 
-#define BUFFSIZE 1024
+#define BUFFSIZE 4096
 
 typedef struct {
     bool finished;

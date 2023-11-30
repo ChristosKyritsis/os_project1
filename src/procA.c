@@ -12,23 +12,23 @@
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
     char msg[BUFFSIZE];
-    size_t position = 0;
+    //size_t position = 0;
     
     while (true) {
-        //printf("Process B sent: %s\n", data->messageB);
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        data->countA++;
-        data->numOfPiecesA += strlen(msg);
+        // data->countA++;
+        // data->numOfPiecesA += strlen(msg);
 
-        if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
-            memcpy(&data->messageA, msg, strlen(msg));
-        else {
-            for (int i = 0; i < strlen(msg); i += 15) {
-                position += i;
-                memcpy(&data->messageA, msg + position, strlen(msg) - position);
-            }
-        } 
+        memcpy(&data->messageA, msg, strlen(msg));
+        // if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
+        //     memcpy(&data->messageA, msg, strlen(msg));
+        // else {
+        //     for (int i = 0; i < strlen(msg); i += 15) {
+        //         position += i;
+        //         memcpy(&data->messageA, msg + position, strlen(msg) - position);
+        //     }
+        // } 
 
         sem_post(&data->semA);
 
@@ -36,11 +36,9 @@ void* input_thread(void* arg) {
             data->finished = true;
             sem_post(&data->semA);       // ending the process
             print_data(data);
-            //sem_post(&data->terminatingSem);
             break;
         }
     }
-
     pthread_exit(NULL);
 }
 
@@ -54,15 +52,10 @@ void* receive_thread(void* arg) {
     while (true) {
         sem_wait(&data->semB);
 
-        if (data->finished == true) {
-            //print_data(data);
-            break;        
-        }
-            
+        if (data->finished == true) 
+            break;      
 
         printf("Process B sent: %s\n\n", data->messageB);
-
-        //sem_wait(&data->terminatingSem);
 
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
@@ -83,8 +76,7 @@ void* receive_thread(void* arg) {
         //     sem_post(&data->terminatingSem);
         //     break;
         // }
-    }
-    
+    }  
     pthread_exit(NULL);
 }
 

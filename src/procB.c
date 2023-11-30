@@ -9,15 +9,15 @@ void* input_thread_B(void* arg) {
     char msg[BUFFSIZE];
 
     while (true) {
-        printf("Process A sent: %s\n", data->messageA);
+        //printf("Process A sent: %s\n", data->messageA);
         printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
 
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
         
         memcpy(&data->messageB, msg, strlen(msg));
 
-        data->countB++;
-        data->numOfPiecesB += strlen(msg);
+        // data->countB++;
+        // data->numOfPiecesB += strlen(msg);
 
         sem_post(&data->semB);
 
@@ -25,7 +25,6 @@ void* input_thread_B(void* arg) {
             data->finished = true;
             sem_post(&data->semB);
             print_data(data);
-            //sem_post(&data->terminatingSem);
             break;
         }
     }
@@ -45,9 +44,7 @@ void* receive_thread_B(void* arg) {
         if (data->finished == true)
             break;
 
-        //printf("Process A sent: %s\n", data->messageA);
-        
-        //sem_wait(&data->terminatingSem);
+        printf("Process A sent: %s\n\n", data->messageA);
 
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
