@@ -2,8 +2,15 @@
 
 
 void initialize_data(SharedData* data) {
-    sem_init(&data->semA, 1, 1);        // second argument is 1 because the semaphores are shared
-    sem_init(&data->semB, 1, 0);        // between two processes
+    // second argument is 1 because the semaphores are shared between two processes
+    if (sem_init(&data->semA, 1, 1) == -1) {
+        printf("Failed to open semaphore\n");
+        exit(EXIT_FAILURE);    
+    }  
+    if (sem_init(&data->semB, 1, 0) == -1) {
+        printf("Failed to open semaphore\n");
+        exit(EXIT_FAILURE);
+    }       
     data->countA = 0;
     data->countB = 0;                    
     data->numOfPiecesA = 0;

@@ -9,15 +9,10 @@ void* input_thread_B(void* arg) {
     char msg[BUFFSIZE];
 
     while (true) {
-        //printf("Process A sent: %s\n", data->messageA);
         printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
 
-        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        
+        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);        
         memcpy(&data->messageB, msg, strlen(msg));
-
-        // data->countB++;
-        // data->numOfPiecesB += strlen(msg);
 
         sem_post(&data->semB);
 
@@ -34,7 +29,6 @@ void* input_thread_B(void* arg) {
 
 void* receive_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
-    //char msg[BUFFSIZE];
     struct timeval begin, end;
     double totalTime = 0.0;
 
@@ -53,21 +47,15 @@ void* receive_thread_B(void* arg) {
         data->numOfPiecesB +=strlen(data->messageA);
         data->waitingTimeB += totalTime;
 
-        // printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        // fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        // memcpy(&data->messageB, msg, strlen(msg));
-        // sem_post(&data->semB);
 
-        // if (strcmp(data->messageB, "#BYE#\n") == 0) {
-        //     data->finished = true;
-        //     sem_post(&data->semB);
-        //     sem_post(&data->terminatingSem);
-        //     break;
-        // }
-
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
+            data->finished = true;
+            sem_post(&data->semB);
+            print_data(data);
+            break;
+        }
     }
-
     pthread_exit(NULL);
 }
 
@@ -91,8 +79,6 @@ int main(int argc, char* argv[]) {
     }
 
     close(fd);
-
-
     //initialize_data(data);
 
     int res1, res2;
@@ -117,7 +103,6 @@ int main(int argc, char* argv[]) {
 
     free_data(data);
     munmap(data, sizeof(SharedData));
-    //unlink(argv[1]);
 
     return 0;
 }

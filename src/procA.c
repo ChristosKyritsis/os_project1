@@ -17,8 +17,6 @@ void* input_thread(void* arg) {
     while (true) {
         printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        // data->countA++;
-        // data->numOfPiecesA += strlen(msg);
 
         memcpy(&data->messageA, msg, strlen(msg));
         // if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
@@ -45,7 +43,6 @@ void* input_thread(void* arg) {
 
 void* receive_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
-    //char msg[BUFFSIZE];
     struct timeval begin, end;
     double totalTime = 0.0;
 
@@ -64,19 +61,15 @@ void* receive_thread(void* arg) {
         data->numOfPiecesA += strlen(data->messageB);
         data->waitingTimeA += totalTime;
 
-        //printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
         gettimeofday(&begin, NULL);
-        // fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-        // memcpy(&data->messageA, msg, strlen(msg));
-        // sem_post(&data->semA);
 
-        // if (strcmp(data->messageA, "#BYE#\n") == 0) {
-        //     data->finished = true;
-        //     sem_post(&data->semA);       // ending the process
-        //     sem_post(&data->terminatingSem);
-        //     break;
-        // }
-    }  
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+            data->finished = true;
+            sem_post(&data->semA);
+            print_data(data);
+            break;
+        }
+    }
     pthread_exit(NULL);
 }
 
@@ -132,10 +125,9 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
-    print_data(data);
+    //print_data(data);
     free_data(data);
     munmap(data, sizeof(SharedData));
-    //close(fd);
     shm_unlink(shmpath);
 
     return 0;
