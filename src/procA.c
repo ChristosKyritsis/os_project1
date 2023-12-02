@@ -32,7 +32,7 @@ void* input_thread(void* arg) {
 
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semA);       // ending the process
+            sem_post(&data->semB);       // ending the process
             print_data(data);
             break;
         }
@@ -57,15 +57,16 @@ void* receive_thread(void* arg) {
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
 
-        data->countA++;
-        data->numOfPiecesA += strlen(data->messageB);
+        data->countB++;
+        data->numOfPiecesA += strlen(data->messageB) - 1;   // -1 because of the "\n" character
         data->waitingTimeA += totalTime;
 
         gettimeofday(&begin, NULL);
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semA);
+            //sem_post(&data->terminatingSem);
+            sem_post(&data->semB);
             print_data(data);
             break;
         }
@@ -80,6 +81,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     
+    printf("|||||||PROCESS A|||||||\n\n");
+
     // Creation of shared memory
     char* shmpath = argv[1];
     int fd;

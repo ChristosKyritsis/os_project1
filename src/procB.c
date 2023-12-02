@@ -18,7 +18,7 @@ void* input_thread_B(void* arg) {
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semB);
+            sem_post(&data->semA);
             print_data(data);
             break;
         }
@@ -43,15 +43,15 @@ void* receive_thread_B(void* arg) {
         gettimeofday(&end, NULL);
         totalTime = end.tv_sec - begin.tv_sec;
 
-        data->countB++;
-        data->numOfPiecesB +=strlen(data->messageA);
+        data->countA++;
+        data->numOfPiecesB +=strlen(data->messageA) -1;
         data->waitingTimeB += totalTime;
 
         gettimeofday(&begin, NULL);
 
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semB);
+            sem_post(&data->semA);
             print_data(data);
             break;
         }
@@ -66,6 +66,10 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     
+
+    printf("|||||||PROCESS B|||||||\n\n");
+
+
     int fd;
     fd = shm_open(argv[1], O_RDWR, 0666);
     if (fd == -1) {
@@ -101,7 +105,7 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
-    free_data(data);
+    //free_data(data);
     munmap(data, sizeof(SharedData));
 
     return 0;
