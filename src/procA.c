@@ -11,28 +11,14 @@
 
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
-    char msg[BUFFSIZE];
-    //size_t position = 0;
     
     while (true) {
-        printf("Please enter any message for Process B or type #BYE# to terminate the process: ");
-        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);
-
-        memcpy(&data->messageA, msg, strlen(msg));
-        // if (strlen(msg) <= MAX_SIZE_OF_MESSAGE)
-        //     memcpy(&data->messageA, msg, strlen(msg));
-        // else {
-        //     for (int i = 0; i < strlen(msg); i += 15) {
-        //         position += i;
-        //         memcpy(&data->messageA, msg + position, strlen(msg) - position);
-        //     }
-        // } 
+        fgets(data->messageA, BUFFSIZE, stdin);
 
         sem_post(&data->semA);
 
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semB);       // ending the process
             print_data(data);
             break;
         }
@@ -52,10 +38,31 @@ void* receive_thread(void* arg) {
         if (data->finished == true) 
             break;      
 
-        printf("Process B sent: %s\n\n", data->messageB);
+        int length = strlen(data->messageB);
 
+        if (length <= MAX_SIZE_OF_MESSAGE) {
+            printf("Process B sent: %s\n", data->messageB);
+        }
+        else {
+            printf("The message that Process B sent was over 15 characters so it will be printed in string of 15\n");
+            printf("Process B sent: ");
+            for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
+                printf("%c", data->messageB[j]);
+            }
+            printf("\n");
+
+            for (int i = MAX_SIZE_OF_MESSAGE; i < length; i += 15) {
+                printf("Process B sent: ");
+                for (int k = 0; k < MAX_SIZE_OF_MESSAGE && i + k < length; ++k) {
+                    printf("%c", data->messageB[i+k]);
+                }
+                printf("\n");
+            }
+
+        }
+        
         gettimeofday(&end, NULL);
-        totalTime = end.tv_sec - begin.tv_sec;
+        totalTime = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec)/1000000.0;
 
         data->countB++;
         data->numOfPiecesA += strlen(data->messageB) - 1;   // -1 because of the "\n" character
@@ -65,8 +72,6 @@ void* receive_thread(void* arg) {
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
-            //sem_post(&data->terminatingSem);
-            sem_post(&data->semB);
             print_data(data);
             break;
         }
@@ -81,8 +86,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     
-    printf("|||||||PROCESS A|||||||\n\n");
-
     // Creation of shared memory
     char* shmpath = argv[1];
     int fd;
@@ -107,6 +110,8 @@ int main(int argc, char* argv[]) {
 
     initialize_data(data);
 
+    printf("-----THIS IS PROCESS A-----\n\n");
+
     int res1, res2;
     pthread_t inpThread, recThread;
 
@@ -128,7 +133,6 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
-    //print_data(data);
     free_data(data);
     munmap(data, sizeof(SharedData));
     shm_unlink(shmpath);

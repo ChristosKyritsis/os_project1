@@ -6,19 +6,14 @@
 
 void* input_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
-    char msg[BUFFSIZE];
 
     while (true) {
-        printf("Please enter any message for Process A or type #BYE# to terminate the process: ");
-
-        fgets(msg, MAX_SIZE_OF_MESSAGE, stdin);        
-        memcpy(&data->messageB, msg, strlen(msg));
+        fgets(data->messageB, BUFFSIZE, stdin);
 
         sem_post(&data->semB);
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semA);
             print_data(data);
             break;
         }
@@ -38,10 +33,31 @@ void* receive_thread_B(void* arg) {
         if (data->finished == true)
             break;
 
-        printf("Process A sent: %s\n\n", data->messageA);
+        int length = strlen(data->messageA);
+
+        if (length <= MAX_SIZE_OF_MESSAGE) {
+            printf("Process A sent: %s\n", data->messageA);
+        }
+        else {
+            printf("The message that Process A sent was over 15 characters so it will be printed in string of 15\n");
+            printf("Process A sent: ");
+            for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
+                printf("%c", data->messageA[j]);
+            }
+            printf("\n");
+
+            for (int i = MAX_SIZE_OF_MESSAGE; i < length; i += 15) {
+                printf("Process A sent: ");
+                for (int k = 0; k < MAX_SIZE_OF_MESSAGE && i + k < length; ++k) {
+                    printf("%c", data->messageA[i+k]);
+                }
+                printf("\n");
+            }
+
+        }
 
         gettimeofday(&end, NULL);
-        totalTime = end.tv_sec - begin.tv_sec;
+        totalTime = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec)/1000000.0;
 
         data->countA++;
         data->numOfPiecesB +=strlen(data->messageA) -1;
@@ -51,7 +67,6 @@ void* receive_thread_B(void* arg) {
 
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
             data->finished = true;
-            sem_post(&data->semA);
             print_data(data);
             break;
         }
@@ -65,10 +80,6 @@ int main(int argc, char* argv[]) {
         printf("No arguments given on command line\n");
         exit(EXIT_FAILURE);
     }
-    
-
-    printf("|||||||PROCESS B|||||||\n\n");
-
 
     int fd;
     fd = shm_open(argv[1], O_RDWR, 0666);
@@ -83,7 +94,8 @@ int main(int argc, char* argv[]) {
     }
 
     close(fd);
-    //initialize_data(data);
+
+    printf("-----THIS IS PROCESS B-----\n\n");
 
     int res1, res2;
     pthread_t inpThread, recThread;
@@ -105,7 +117,6 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
-    //free_data(data);
     munmap(data, sizeof(SharedData));
 
     return 0;
