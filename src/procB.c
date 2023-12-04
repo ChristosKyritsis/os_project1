@@ -1,8 +1,5 @@
 #include "inc.h"
 
-#define MAX_SIZE_OF_MESSAGE 15
-#define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab might delete later
-
 
 void* input_thread_B(void* arg) {
     SharedData* data = (SharedData*)arg;
@@ -35,11 +32,12 @@ void* receive_thread_B(void* arg) {
 
         int length = strlen(data->messageA);
 
-        if (length <= MAX_SIZE_OF_MESSAGE) {
+        // MAX_SIZE_OF_MESSAGE + 1 because there is a "\n" character in the end
+        if (length <= MAX_SIZE_OF_MESSAGE + 1) {
             printf("Process A sent: %s\n", data->messageA);
         }
         else {
-            printf("The message that Process A sent was over 15 characters so it will be printed in string of 15\n");
+            printf("The message that Process A sent was over 15 characters so it will be printed in strings of 15 at most\n");
             printf("Process A sent: ");
             for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
                 printf("%c", data->messageA[j]);

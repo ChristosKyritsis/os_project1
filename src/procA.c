@@ -2,12 +2,6 @@
 
 #include "inc.h"
 
-//#define _POSIX_C_SOURCE 200809L
-
-#define MAX_SIZE_OF_MESSAGE 15
-
-#define SEM_PERMS (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) // code from lab
-
 
 void* input_thread(void* arg) {
     SharedData* data = (SharedData*)arg;
@@ -40,11 +34,12 @@ void* receive_thread(void* arg) {
 
         int length = strlen(data->messageB);
 
-        if (length <= MAX_SIZE_OF_MESSAGE) {
+        // MAX_SIZE_OF_MESSAGE + 1 because there is a "\n" character in the end
+        if (length <= MAX_SIZE_OF_MESSAGE + 1) {
             printf("Process B sent: %s\n", data->messageB);
         }
         else {
-            printf("The message that Process B sent was over 15 characters so it will be printed in string of 15\n");
+            printf("The message that Process B sent was over 15 characters so it will be printed in strings of 15 at most\n");
             printf("Process B sent: ");
             for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
                 printf("%c", data->messageB[j]);
@@ -108,6 +103,7 @@ int main(int argc, char* argv[]) {
 
     close(fd);
 
+    // Process A is the one in charge of initializing the data
     initialize_data(data);
 
     printf("-----THIS IS PROCESS A-----\n\n");
@@ -133,6 +129,7 @@ int main(int argc, char* argv[]) {
     pthread_join(inpThread, NULL);
     pthread_join(recThread, NULL);
 
+    // Process A is the one in charge of freeing the data
     free_data(data);
     munmap(data, sizeof(SharedData));
     shm_unlink(shmpath);

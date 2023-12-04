@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h> // Creating and managing shared memory
-#include <unistd.h> // 
+#include <unistd.h>  
 #include <sys/types.h>
 #include <ctype.h>
 #include <fcntl.h>
@@ -14,17 +14,18 @@
 #include <stdbool.h>
 
 #define BUFFSIZE 4096
+#define MAX_SIZE_OF_MESSAGE 15
 
 typedef struct {
     bool finished;
     sem_t semA;
     sem_t semB;
-    char messageA[BUFFSIZE];
-    char messageB[BUFFSIZE];
-    int countA;
-    int countB;
-    int numOfPiecesA;
-    int numOfPiecesB;
+    char messageA[BUFFSIZE];    // Stores the message that Process A sends
+    char messageB[BUFFSIZE];    // Stores the message that Process B sends
+    int countA;                 // Number of messages that Process A has sent
+    int countB;                 // Number of messages that Process B has sent
+    int numOfPiecesA;           // Size of the messages that Process B has sent to Process A
+    int numOfPiecesB;           // Size of the messages that Process A has sent to Process B
     double waitingTimeA;
     double waitingTimeB;
 } SharedData;
