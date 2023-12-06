@@ -10,12 +10,11 @@ void initialize_data(SharedData* data) {
     if (sem_init(&data->semB, 1, 0) == -1) {
         printf("Failed to open semaphore\n");
         exit(EXIT_FAILURE);
-    } 
+    }
     data->countA = 0;
     data->countB = 0;                    
     data->numOfPiecesA = 0;
     data->numOfPiecesB = 0;
-    data->finished = false;
     data->waitingTimeA = 0.0;
     data->waitingTimeB = 0.0;
 }

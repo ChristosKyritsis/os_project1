@@ -17,7 +17,6 @@
 #define MAX_SIZE_OF_MESSAGE 15
 
 typedef struct {
-    bool finished;
     sem_t semA;
     sem_t semB;
     char messageA[BUFFSIZE];    // Stores the message that Process A sends

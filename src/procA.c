@@ -12,7 +12,7 @@ void* input_thread(void* arg) {
         sem_post(&data->semA);
 
         if (strcmp(data->messageA, "#BYE#\n") == 0) {
-            data->finished = true;
+            sem_post(&data->semA);
             print_data(data);
             break;
         }
@@ -28,10 +28,11 @@ void* receive_thread(void* arg) {
 
     while (true) {
         sem_wait(&data->semB);
+        gettimeofday(&begin, NULL);
 
-        if (data->finished == true) 
-            break;      
-
+        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+            break;
+        }
         int length = strlen(data->messageB);
 
         // MAX_SIZE_OF_MESSAGE + 1 because there is a "\n" character in the end
@@ -39,37 +40,35 @@ void* receive_thread(void* arg) {
             printf("Process B sent: %s\n", data->messageB);
         }
         else {
-            printf("The message that Process B sent was over 15 characters so it will be printed in strings of 15 at most\n");
-            printf("Process B sent: ");
+            printf("The message that Process B sent was over 15 characters so it will be printed in strings of 15 at most\n\n");
+            int counter = 1;
+            printf("Process B sent: \n");
+            printf("String number %d \t ", counter);
             for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
                 printf("%c", data->messageB[j]);
             }
+            counter++;
             printf("\n");
 
             for (int i = MAX_SIZE_OF_MESSAGE; i < length; i += 15) {
-                printf("Process B sent: ");
+                printf("String number %d \t ", counter);
                 for (int k = 0; k < MAX_SIZE_OF_MESSAGE && i + k < length; ++k) {
                     printf("%c", data->messageB[i+k]);
                 }
+                counter++;
                 printf("\n");
             }
 
         }
         
         gettimeofday(&end, NULL);
+        // Dividing by 1000000.0 in order to turn the microseconds to seconds
         totalTime = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec)/1000000.0;
 
+        // Updating process stats
         data->countB++;
         data->numOfPiecesA += strlen(data->messageB) - 1;   // -1 because of the "\n" character
         data->waitingTimeA += totalTime;
-
-        gettimeofday(&begin, NULL);
-
-        if (strcmp(data->messageB, "#BYE#\n") == 0) {
-            data->finished = true;
-            print_data(data);
-            break;
-        }
     }
     pthread_exit(NULL);
 }

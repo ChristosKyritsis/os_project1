@@ -10,7 +10,7 @@ void* input_thread_B(void* arg) {
         sem_post(&data->semB);
 
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
-            data->finished = true;
+            sem_post(&data->semB);
             print_data(data);
             break;
         }
@@ -26,9 +26,11 @@ void* receive_thread_B(void* arg) {
 
     while (true) {
         sem_wait(&data->semA);
+        gettimeofday(&begin, NULL);
 
-        if (data->finished == true)
+        if (strcmp(data->messageA, "#BYE#\n") == 0) {
             break;
+        }
 
         int length = strlen(data->messageA);
 
@@ -37,18 +39,22 @@ void* receive_thread_B(void* arg) {
             printf("Process A sent: %s\n", data->messageA);
         }
         else {
-            printf("The message that Process A sent was over 15 characters so it will be printed in strings of 15 at most\n");
-            printf("Process A sent: ");
+            int counter = 1;
+            printf("The message that Process A sent was over 15 characters so it will be printed in strings of 15 at most\n\n");
+            printf("Process A sent: \n");
+            printf("String number %d \t ", counter);
             for (int j = 0; j < MAX_SIZE_OF_MESSAGE && j < length; ++j) {
                 printf("%c", data->messageA[j]);
             }
+            counter++;
             printf("\n");
 
             for (int i = MAX_SIZE_OF_MESSAGE; i < length; i += 15) {
-                printf("Process A sent: ");
+                printf("String number %d \t ", counter);
                 for (int k = 0; k < MAX_SIZE_OF_MESSAGE && i + k < length; ++k) {
                     printf("%c", data->messageA[i+k]);
                 }
+                counter++;
                 printf("\n");
             }
 
@@ -57,17 +63,10 @@ void* receive_thread_B(void* arg) {
         gettimeofday(&end, NULL);
         totalTime = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec)/1000000.0;
 
+        // updating the info of the process
         data->countA++;
-        data->numOfPiecesB +=strlen(data->messageA) -1;
+        data->numOfPiecesB +=strlen(data->messageA) -1;     // -1 because there is a "\n" character at the end
         data->waitingTimeB += totalTime;
-
-        gettimeofday(&begin, NULL);
-
-        if (strcmp(data->messageA, "#BYE#\n") == 0) {
-            data->finished = true;
-            print_data(data);
-            break;
-        }
     }
     pthread_exit(NULL);
 }
