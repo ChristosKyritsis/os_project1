@@ -33,6 +33,7 @@ void* receive_thread(void* arg) {
         if (strcmp(data->messageB, "#BYE#\n") == 0) {
             break;
         }
+
         int length = strlen(data->messageB);
 
         // MAX_SIZE_OF_MESSAGE + 1 because there is a "\n" character in the end
