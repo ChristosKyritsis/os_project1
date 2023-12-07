@@ -30,9 +30,9 @@ void* receive_thread(void* arg) {
         sem_wait(&data->semB);
         gettimeofday(&begin, NULL);
 
-        if (strcmp(data->messageB, "#BYE#\n") == 0) {
+        if (strcmp(data->messageB, "#BYE#\n") == 0) 
             break;
-        }
+        
 
         int length = strlen(data->messageB);
 
@@ -41,6 +41,8 @@ void* receive_thread(void* arg) {
             printf("Process B sent: %s\n", data->messageB);
         }
         else {
+            // Takes the oversized message and types it in messages of 15
+            // variable counter is used to keep track of how many messages the initial message is split into
             printf("The message that Process B sent was over 15 characters so it will be printed in strings of 15 at most\n\n");
             int counter = 1;
             printf("Process B sent: \n");
@@ -90,14 +92,17 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     
+    // truncating the file to the length of SharedData
     int trunc;
     trunc = ftruncate(fd, sizeof(SharedData));
     if (trunc == -1) {
+        printf("Failed to truncate\n");
         exit(EXIT_FAILURE);
     }
 
     SharedData* data = (SharedData*)mmap(NULL, sizeof(SharedData), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
+        printf("Mapping failed\n");
         exit(EXIT_FAILURE);
     }
 
@@ -108,9 +113,9 @@ int main(int argc, char* argv[]) {
 
     printf("-----THIS IS PROCESS A-----\n\n");
 
+    // Creating and joining threads
     int res1, res2;
     pthread_t inpThread, recThread;
-
 
     res1 = pthread_create(&recThread, NULL, receive_thread, (void*)data);
     if (res1 != 0) {
@@ -118,7 +123,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-  
     res2 = pthread_create(&inpThread, NULL, input_thread, (void*)data);
 
     if (res2 != 0) {
@@ -126,13 +130,29 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    pthread_join(inpThread, NULL);
-    pthread_join(recThread, NULL);
+    if (pthread_join(inpThread, NULL) != 0) {
+        printf("Error on pthread_join\n");
+        exit(EXIT_FAILURE);
+    }
+    if (pthread_join(recThread, NULL) != 0) {
+        printf("Error on pthread_join\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Process A is the one in charge of freeing the data
     free_data(data);
-    munmap(data, sizeof(SharedData));
-    shm_unlink(shmpath);
+
+    // unmaping
+    if (munmap(data, sizeof(SharedData)) == -1) {
+        printf("Failed to unmap\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // removing shared memory object
+    if (shm_unlink(shmpath) == -1) {
+        printf("Failed to remove shared memory object\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

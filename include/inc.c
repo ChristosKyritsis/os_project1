@@ -44,6 +44,12 @@ void print_data(SharedData* data) {
 
 
 void free_data(SharedData* data) {
-    sem_destroy(&data->semA);
-    sem_destroy(&data->semB);
+    if (sem_destroy(&data->semA) == -1) {
+        printf("Failed to destroy semaphore\n");
+        exit(EXIT_FAILURE);
+    }
+    if (sem_destroy(&data->semB) == -1) {
+        printf("Failed to destroy semaphore\n");
+        exit(EXIT_FAILURE);
+    }
 }

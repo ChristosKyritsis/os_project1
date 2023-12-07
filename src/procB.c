@@ -25,13 +25,13 @@ void* receive_thread_B(void* arg) {
     double totalTime = 0.0;
 
     while (true) {
+        // Waiting for Process A to type a message
         sem_wait(&data->semA);
         gettimeofday(&begin, NULL);
 
-        if (strcmp(data->messageA, "#BYE#\n") == 0) {
+        if (strcmp(data->messageA, "#BYE#\n") == 0) 
             break;
-        }
-
+        
         int length = strlen(data->messageA);
 
         // MAX_SIZE_OF_MESSAGE + 1 because there is a "\n" character in the end
@@ -39,6 +39,8 @@ void* receive_thread_B(void* arg) {
             printf("Process A sent: %s\n", data->messageA);
         }
         else {
+            // Takes the oversized message and types it in messages of 15
+            // variable counter is used to keep track of how many messages the initial message is split into 
             int counter = 1;
             printf("The message that Process A sent was over 15 characters so it will be printed in strings of 15 at most\n\n");
             printf("Process A sent: \n");
@@ -61,6 +63,7 @@ void* receive_thread_B(void* arg) {
         }
 
         gettimeofday(&end, NULL);
+        // 1000000.0 the amount required to turn microseconds to seconds
         totalTime = (end.tv_sec - begin.tv_sec) + (end.tv_usec - begin.tv_usec)/1000000.0;
 
         // updating the info of the process
@@ -87,6 +90,7 @@ int main(int argc, char* argv[]) {
 
     SharedData* data = (SharedData*)mmap(NULL, sizeof(SharedData), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
+        printf("Mapping failed\n");
         exit(EXIT_FAILURE);
     }
 
@@ -94,16 +98,16 @@ int main(int argc, char* argv[]) {
 
     printf("-----THIS IS PROCESS B-----\n\n");
 
+    // Creating and joining threads
     int res1, res2;
     pthread_t inpThread, recThread;
-
+    
     res1 = pthread_create(&recThread, NULL, receive_thread_B, (void*)data);
     if (res1 != 0) {
         printf("Creation of thread failed\n");
         exit(EXIT_FAILURE);
     }
 
-  
     res2 = pthread_create(&inpThread, NULL, input_thread_B, (void*)data);
 
     if (res2 != 0) {
@@ -111,10 +115,21 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    pthread_join(inpThread, NULL);
-    pthread_join(recThread, NULL);
+    if (pthread_join(inpThread, NULL) != 0) {
+        printf("Error on pthread_join\n");
+        exit(EXIT_FAILURE);
+    }
 
-    munmap(data, sizeof(SharedData));
+    if (pthread_join(recThread, NULL) != 0) {
+        printf("Error on pthread_join\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // unmaping
+    if (munmap(data, sizeof(SharedData)) == -1) {
+        printf("Failed to unmap\n");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }

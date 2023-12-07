@@ -1,17 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/shm.h> // Creating and managing shared memory
-#include <unistd.h>  
-#include <sys/types.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <sys/stat.h> // for (S_IRUSR|S_IWUSR)
+#include <unistd.h> // ftruncate  
+#include <sys/types.h> // ftruncate
+#include <fcntl.h> // O_CREAT etc.
 #include <sys/mman.h>
 #include <string.h>
 #include <pthread.h> // Used for creating and managing threads
-#include <sys/time.h>
+#include <sys/time.h> 
 #include <semaphore.h>
-#include <stdbool.h>
+#include <stdbool.h> // only used for while(true)
 
 #define BUFFSIZE 4096
 #define MAX_SIZE_OF_MESSAGE 15
