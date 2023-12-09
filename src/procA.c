@@ -79,7 +79,7 @@ void* receive_thread(void* arg) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        printf("No arguments given on command line\n");
+        printf("No arguments given on command line.\nPlease run the program again but this time use an argument\n\n");
         exit(EXIT_FAILURE);
     }
     

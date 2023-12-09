@@ -1,3 +1,13 @@
+ΠΑΡΑΔΟΧΕΣ:
+    Η εργασία έχει όλα όσα ζητάει η εκφώνηση με μόνη εξαίρεση πως για τον τερματισμό της θα πρέπει
+    και οι δύο διεργασίες Α και Β να γράψουν το μήνυμα τερματισμού στον τερματικό τους.
+    Επίσης, κάτι το οποίο αποτελεί σχειδαστική επιλογή είναι πως στην περίπτωση που δεν δωθούν
+    μηνύματα σε κάποια από τις 2 διεργασίες (ή και στις 2) και δωθεί κατευθείαν μήνυμα τερματισμού
+    στις εκτυπώσεις αντί της εμφάνισης του -nan και nan αντίστοιχα προτιμήθηκε να εμφανιστεί μήνυμα
+    πως δεν υπήρξαν μηνύματα.
+
+
+
 Η υλοποίηση της εργασίας αποτελείται από:
     Τα folders:
         include
@@ -30,7 +40,8 @@
             η initialize_data αρχικοποιεί σε 0 όλες τις υπόλοιπες μεταβλητές του struct δείχνοντας
             πως μόλις ξεκίνησε και δεν έχει γίνει update σε καμία από τις μεταβλητές.
             Στη συνάρτηση print_data εφόσον έχει δημιουργηθεί η κοινή μνήμη γίνονται οι απαραίτητες
-            εκτυπώσεις μηνυμάτων.
+            εκτυπώσεις μηνυμάτων, λαμβάνοντας υπόψιν τις περιπτώσεις που κάποια διεργασία δεν έχει
+            λάβει κάποιο μήνυμα.
             Τέλος, η συνάρτηση free_data ελευθερώνει τους σημαφόρους που αρχικοοπιήθηκαν με την
             sem_init, κάνοντας sem_destroy.
 
@@ -113,4 +124,270 @@
 
 
 ΠΛΗΡΟΦΟΡΙΕΣ ΓΙΑ ΕΚΤΕΛΕΣΗ:
-    
+    Για την εκτέλεση θα πρέπει εφόσον ανοιχτούν 2 τερματικά να γίνει σε ένα από τα δύο η εντολή
+    make η οποία θα μεταγλωτίσει τα προγράμματα Α και Β και έπειτα για να τρέξουμε τα προγράμματα
+    θα πρέπει στο ένα από τα δύο τερματικά να δωθεί η εντολή:
+     ./bin/procA arg 
+    όπου εδώ το arg θα μπορούσε να είναι οποιδήποτε όρισμα θελήσει να δώσει ο χρήστης και αντίστοιχα
+    στο άλλο τερματικό δίνεται η εντολή:
+    ./bin/procB arg 
+    όπου στην συγκεκριμένη περίπτωση θα πρέπει το arg να είναι ίδιο με αυτό του άλλου τερματικού.
+
+    Σε περίπτωση που δεν δωθεί από τον χρήστη κάποιο argument στην γραμμή εντολών το πρόγραμμα θα
+    τερματίσει εμφανίζοντας ανάλογο μήνυμα.
+
+    Δίνεται επίσης η δυνατότητα της εντολής make clean η οποία αφαιρεί τους φακέλους bin και build
+    καθώς και τα αρχεία που αυτοί έχουν μέσα τους.
+
+
+ΑΠΟΤΕΛΕΣΜΑΤΑ ΠΡΟΣΟΜΟΙΩΣΗΣ:
+    Για έλεγχο ορθότητας της εργασίας παρακάτω παρέχονται 3 διαφορετικές εκτελέσεις που έχουν ως
+    σκοπό τον έλεγχο διαφόρων περιπτώσεων που θεωρήθηκαν ότι λαμβάνουν υπόψη κάποια απαραίτητα
+    σημεία που πρέπει να ελεγχθούν. 
+
+    Συγκεκριμένα, η πρώτη εκτέλεση περιλαμβάνει μία κανονική περίπτωση συνομιλίας των διεργασιών
+    Α και Β, όπου κάποια διεργασία στέλνει συνεχόμενα μηνύματα για να δείξει πως το πρόγραμμα δεν
+    περιορίζεται σε κάποια χρονική σειρά μεταξύ των διεργασιών. Σε κάποιο σημείο στέλνονται επίσης
+    μηνύματα μεγέθους άνω των 15 χαρακτήρων για να απεικονήσει την αντιμετώπιση του προγράμματος σε
+    μία τέτοια περίπτωση.
+    Η δεύτερη εκτέλεση δείχνει την περίπτωση στην οποία μία από τις δυο διεργασίες δεν στείλει κάποιο
+    μήνυμα, όπου και εμφανίζεται στα στατιστικά ανάλογο μήνυμα.
+    Τέλος, η τρίτη και τελευταία εκτέλεση, δείχνει την περίπτωση όπου και οι 2 διεργασίες δεν στέλνουν
+    μήνυμα, αντιθέτως πληκτρολογείται κατευθείαν το μήνυμα τερματισμού.
+
+    ΣΗΜΕΙΩΣΗ: σε κάποια σημεία μπορεί να φαίνεται πως εκτυπώνει μηνύματα 14 χαρακτήρων, αλλά στην
+    πραγματικότητα εκτυπώνει 15, απλά ο χαρακτήρας του κενού δεν εμφανίζεται.
+
+
+
+
+    ΕΚΤΕΛΕΣΗ 1:
+        terminal1: 
+
+        ./bin/procA test1
+        -----THIS IS PROCESS A-----
+        hello procB
+        Process B sent: hi procA
+
+        Process B sent: how are you?
+
+        Thank you!! Im good. How about you?
+        The message that Process B sent was over 15 characters so it will be printed in strings of
+        15 at most
+
+        Process B sent:
+        String number 1     Im also good!. 
+        String number 2     So, what are yo
+        String number 3     u up to these d
+        String number 4     ays. Or in the 
+        String number 5     past month.
+
+        The message that Process B sent was over 15 characters so it will be printed in strings of
+        15 at most
+
+        Process B sent:
+        String number 1     everything alri
+        String number 2     ght?
+
+        yeah not much
+        look i have to go now, so we will talk another time. Bye!
+        Process B sent: bye
+
+        #BYE#
+
+        -----END OF PROCESS-----
+
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 4
+        Number of messages process A has received: 5 
+        Number of messages process B has sent: 5 
+        Number of messages process B has received: 4 
+        Total number of pieces in process A: 113   
+        Total number of pieces in process B: 116
+        Average number of pieces in process A: 28.2
+        Average number of pieces in process B: 23.2
+        Total waiting time in procees A: 0.000353
+        Total waiting time in procees B: 0.000327
+        Average waiting time in process A: 0.000088
+        Average waiting time in process B: 0.000065
+
+
+
+        terminal2 :
+
+        /bin/procB test1
+        -----THIS IS PROCESS B-----
+
+        Process A sent: hello procB
+
+        hi procA
+        how are you?
+        The message that Process A sent was over 15 characters so it will be printed in strings of
+        15 at most
+
+        Process A sent:
+        String number 1:    Thank you!! Im  
+        String number 2:    good. How about
+        String number 3:     you? 
+
+        Im also good!. So, what are you up to these days. Or in the past month.
+        everything alright?
+        Process A sent: yeah not much
+
+        The message that Process A sent was over 15 characters so it will be printed in strings of
+        15 at most
+
+        Process A sent:
+        String number 1:    look i have to
+        String number 2:    go now, so we w
+        String number 3:    ill talk anothe
+        String number 4:    r time. Bye!
+
+        bye
+        #BYE#
+
+        -----END OF PROCESS-----
+
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 4
+        Number of messages process A has received: 5 
+        Number of messages process B has sent: 5 
+        Number of messages process B has received: 4 
+        Total number of pieces in process A: 113   
+        Total number of pieces in process B: 116
+        Average number of pieces in process A: 28.2
+        Average number of pieces in process B: 23.2
+        Total waiting time in procees A: 0.000353
+        Total waiting time in procees B: 0.000327
+        Average waiting time in process A: 0.000088
+        Average waiting time in process B: 0.000065
+
+
+
+
+
+    ΕΚΤΕΛΕΣΗ 2:
+        terminal1:
+
+        ./bin/procA test2
+        -----THIS IS PROCESS A-----
+
+        The message that Process B sent was over 15 characters so it will be printed in strings of
+        15 at most
+
+        Process B sent:
+        String number 1:    Hello procA. I 
+        String number 2:    want you to not
+        String number 3:     type any messa
+        String number 4:    ge so i can see
+        String number 5:     what is going 
+        String number 6:    to be printed a
+        String number 7:    t the end. Just
+        String number 8:     type #BYE#
+
+        #BYE#
+
+        -----END OF PROCESS-----
+
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 0
+        Number of messages process A has received: 1 
+        Number of messages process B has sent: 1 
+        Number of messages process B has received: 0 
+        Total number of pieces in process A: 116   
+        Total number of pieces in process B: 0
+        Average number of pieces in process A: cannot be calculated because process A sent no messages
+        Average number of pieces in process B: 0.0
+        Total waiting time in procees A: 0.000203
+        Total waiting time in procees B: 0.000000
+        Average waiting time in process A: cannot be calculated because process A sent no messages
+        Average waiting time in process B: 0.000000
+
+
+
+        terminal2:
+
+        ./bin/procB test2
+        -----THIS IS PROCESS B-----
+
+        Hello procA. I want you to not type any message so i can see what is going to be printed at the end. Just type #BYE#
+        #BYE#
+
+        -----END OF PROCESS-----
+
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 0
+        Number of messages process A has received: 1 
+        Number of messages process B has sent: 1 
+        Number of messages process B has received: 0 
+        Total number of pieces in process A: 116   
+        Total number of pieces in process B: 0
+        Average number of pieces in process A: cannot be calculated because process A sent no messages
+        Average number of pieces in process B: 0.0
+        Total waiting time in procees A: 0.000203
+        Total waiting time in procees B: 0.000000
+        Average waiting time in process A: cannot be calculated because process A sent no messages
+        Average waiting time in process B: 0.000000
+        
+
+
+
+
+    ΕΚΤΕΛΕΣΗ 3:
+        terminal1:
+
+        ./bin/procA test3
+        -----THIS IS PROCESS A-----
+
+        #BYE#
+
+        -----END OF PROCESS-----
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 0
+        Number of messages process A has received: 0 
+        Number of messages process B has sent: 0 
+        Number of messages process B has received: 0 
+        Total number of pieces in process A: 0   
+        Total number of pieces in process B: 0
+        Average number of pieces in process A: cannot be calculated because process A sent no messages
+        Average number of pieces in process B: cannot be calculated because process B sent no messages
+        Total waiting time in procees A: 0.000000
+        Total waiting time in procees B: 0.000000
+        Average waiting time in process A: cannot be calculated because process A sent no messages
+        Average waiting time in process B: cannot be calculated because process B sent no messages
+
+
+
+        terminal2:
+
+        ./bin/procB test3
+        -----THIS IS PROCESS B-----
+
+        #BYE#
+
+        -----END OF PROCESS-----
+
+        -----STATISTICS-----
+
+        Number of messages process A has sent: 0
+        Number of messages process A has received: 0 
+        Number of messages process B has sent: 0 
+        Number of messages process B has received: 0 
+        Total number of pieces in process A: 0   
+        Total number of pieces in process B: 0
+        Average number of pieces in process A: cannot be calculated because process A sent no messages
+        Average number of pieces in process B: cannot be calculated because process B sent no messages
+        Total waiting time in procees A: 0.000000
+        Total waiting time in procees B: 0.000000
+        Average waiting time in process A: cannot be calculated because process A sent no messages
+        Average waiting time in process B: cannot be calculated because process B sent no messages

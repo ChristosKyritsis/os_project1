@@ -22,20 +22,71 @@ void initialize_data(SharedData* data) {
 
 void print_data(SharedData* data) {
     if (data != NULL) {
-        printf("\n-----END OF PROCESS-----\n");
-        printf("\n\n-----STATISTICS-----\n\n");
-        printf("Number of messages process A has sent: %d\n", data->countA);  
-        printf("Number of messages process A has received: %d\n", data->countB);
-        printf("Number of messages process B has sent: %d\n", data->countB);
-        printf("Number of messages process B has received: %d\n", data->countA);
-        printf("Total number of pieces in process A: %d\n", data->numOfPiecesA);    
-        printf("Total number of pieces in process B: %d\n", data->numOfPiecesB);
-        printf("Average number of pieces in process A: %.1f\n", (double)data->numOfPiecesA/data->countA);
-        printf("Average number of pieces in process B: %.1f\n", (double)data->numOfPiecesB/data->countB);
-        printf("Total waiting time in procees A: %.6f\n", data->waitingTimeA);
-        printf("Total waiting time in procees B: %.6f\n", data->waitingTimeB);
-        printf("Average waiting time in process A: %.6f\n", data->waitingTimeA/data->countA);
-        printf("Average waiting time in process B: %.6f\n", data->waitingTimeB/data->countB);
+        // this is checked first, otherwise it could result in false printing
+        if (data->countA == 0 && data->countB == 0) {
+            printf("\n-----END OF PROCESS-----\n");
+            printf("\n\n-----STATISTICS-----\n\n");
+            printf("Number of messages process A has sent: %d\n", data->countA);  
+            printf("Number of messages process A has received: %d\n", data->countB);
+            printf("Number of messages process B has sent: %d\n", data->countB);
+            printf("Number of messages process B has received: %d\n", data->countA);
+            printf("Total number of pieces in process A: %d\n", data->numOfPiecesA);    
+            printf("Total number of pieces in process B: %d\n", data->numOfPiecesB);
+            printf("Average number of pieces in process A: cannot be calculated because process A sent no messages\n");
+            printf("Average number of pieces in process B: cannot be calculated because process B sent no messages\n");
+            printf("Total waiting time in procees A: %.6f\n", data->waitingTimeA);
+            printf("Total waiting time in procees B: %.6f\n", data->waitingTimeB);
+            printf("Average waiting time in process A: cannot be calculated because process A sent no messages\n");
+            printf("Average waiting time in process B: cannot be calculated because process B sent no messages\n");
+        }
+        else if (data->countA == 0) {
+            printf("\n-----END OF PROCESS-----\n");
+            printf("\n\n-----STATISTICS-----\n\n");
+            printf("Number of messages process A has sent: %d\n", data->countA);  
+            printf("Number of messages process A has received: %d\n", data->countB);
+            printf("Number of messages process B has sent: %d\n", data->countB);
+            printf("Number of messages process B has received: %d\n", data->countA);
+            printf("Total number of pieces in process A: %d\n", data->numOfPiecesA);    
+            printf("Total number of pieces in process B: %d\n", data->numOfPiecesB);
+            printf("Average number of pieces in process A: cannot be calculated because process A sent no messages\n");
+            printf("Average number of pieces in process B: %.1f\n", (double)data->numOfPiecesB/data->countB);
+            printf("Total waiting time in procees A: %.6f\n", data->waitingTimeA);
+            printf("Total waiting time in procees B: %.6f\n", data->waitingTimeB);
+            printf("Average waiting time in process A: cannot be calculated because process A sent no messages\n");
+            printf("Average waiting time in process B: %.6f\n", data->waitingTimeB/data->countB);
+        }
+        else if (data->countB == 0) {
+            printf("\n-----END OF PROCESS-----\n");
+            printf("\n\n-----STATISTICS-----\n\n");
+            printf("Number of messages process A has sent: %d\n", data->countA);  
+            printf("Number of messages process A has received: %d\n", data->countB);
+            printf("Number of messages process B has sent: %d\n", data->countB);
+            printf("Number of messages process B has received: %d\n", data->countA);
+            printf("Total number of pieces in process A: %d\n", data->numOfPiecesA);    
+            printf("Total number of pieces in process B: %d\n", data->numOfPiecesB);
+            printf("Average number of pieces in process A: %.1f\n", (double)data->numOfPiecesA/data->countA);
+            printf("Average number of pieces in process B: cannot be calculated because process B sent no messages\n");
+            printf("Total waiting time in procees A: %.6f\n", data->waitingTimeA);
+            printf("Total waiting time in procees B: %.6f\n", data->waitingTimeB);
+            printf("Average waiting time in process A: %.6f\n", data->waitingTimeA/data->countA);
+            printf("Average waiting time in process B: cannot be calculated because process B sent no messages\n");
+        }
+        else {
+            printf("\n-----END OF PROCESS-----\n");
+            printf("\n\n-----STATISTICS-----\n\n");
+            printf("Number of messages process A has sent: %d\n", data->countA);  
+            printf("Number of messages process A has received: %d\n", data->countB);
+            printf("Number of messages process B has sent: %d\n", data->countB);
+            printf("Number of messages process B has received: %d\n", data->countA);
+            printf("Total number of pieces in process A: %d\n", data->numOfPiecesA);    
+            printf("Total number of pieces in process B: %d\n", data->numOfPiecesB);
+            printf("Average number of pieces in process A: %.1f\n", (double)data->numOfPiecesA/data->countA);
+            printf("Average number of pieces in process B: %.1f\n", (double)data->numOfPiecesB/data->countB);
+            printf("Total waiting time in procees A: %.6f\n", data->waitingTimeA);
+            printf("Total waiting time in procees B: %.6f\n", data->waitingTimeB);
+            printf("Average waiting time in process A: %.6f\n", data->waitingTimeA/data->countA);
+            printf("Average waiting time in process B: %.6f\n", data->waitingTimeB/data->countB);
+        }
     }
     else {
         printf("ERROR!\n");
